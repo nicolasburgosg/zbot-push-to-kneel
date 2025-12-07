@@ -29,3 +29,4 @@ out*/
 # Training runs (keep results/ for curated outputs)
 zbot_walking_task/
 **/run_*/
+CLAUDE.md
