@@ -8,6 +8,34 @@
 </h3>
 </div>
 
+## CPU Training (Laptop-Optimized)
+
+This fork includes laptop-optimized defaults for training on CPU (tested on M2 Air). Key changes from the upstream template:
+
+| Parameter | GPU Default | Laptop Default |
+|-----------|------------|----------------|
+| `num_envs` | 4096 | 8 |
+| `batch_size` | 256 | 4 |
+| `hidden_size` | 128 | 64 |
+| `depth` | 5 | 3 |
+| `num_mixtures` | 5 | 3 |
+
+Model size reduced from ~1.1M to ~195K parameters. Each training step takes ~1-2 minutes on M2 Air.
+
+```bash
+# Laptop training (uses defaults)
+python -m train
+
+# GPU training (if available)
+python -m train num_envs=256 batch_size=64 hidden_size=128 depth=5 num_mixtures=5
+```
+
+### Additional Changes
+
+- **Local `MixtureOfGaussians`**: Re-implemented since it was removed in ksim 0.2.10+
+- **Custom reward classes**: `NaiveForwardReward`, `LateralVelocityPenalty`, etc.
+- **Bug fix**: `mode` property access in action distribution
+
 ## Getting Started
 
 1. Read through the [ksim examples](https://github.com/kscalelabs/ksim/tree/master/examples)
