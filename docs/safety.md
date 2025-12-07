@@ -1,58 +1,37 @@
-# Safety Considerations
+# Limitations and Future Work
 
-## Simulation vs Reality Gap
+This is a simulation-only project. Real-world deployment was not attempted and would require expertise I don't yet have.
 
-This policy was trained entirely in simulation. Before deploying to real hardware:
+## What This Project Demonstrates
 
-1. **Start with low action scale** (`--action-scale 0.1`)
-2. **Use tethering** or soft landing surface
-3. **Verify joint limits** match real robot
-4. **Test with gentle pushes first**
+- PPO training pipeline with JAX/KSIM
+- Reward shaping for locomotion
+- Laptop-scale RL experimentation
+- Documentation and reproducibility
 
-## Joint Limits
+## What This Project Does NOT Cover
 
-The policy respects joint limits defined in the URDF. Verify these match your robot:
+- **Sim-to-real transfer**: Real actuators have delays, friction, and dynamics that differ from simulation
+- **Hardware safety**: Joint limits, torque limits, e-stops, tethering protocols
+- **Failure modes**: What happens when the policy outputs unsafe commands
+- **Sensor noise**: Real IMUs and encoders have different noise characteristics
 
-| Joint | Min (rad) | Max (rad) |
-|-------|-----------|-----------|
-| Hip Yaw | -0.5 | 0.5 |
-| Hip Roll | -0.5 | 0.5 |
-| Hip Pitch | -1.5 | 1.0 |
-| Knee | 0.0 | 2.5 |
-| Ankle Pitch | -1.0 | 1.0 |
-| Ankle Roll | -0.3 | 0.3 |
+## If I Were to Deploy This
 
-## Termination Conditions
+These are questions I'd need to answer (and hope to learn in a robotics program):
 
-The policy was trained with these safety terminations:
-- **Bad Z**: Terminate if base height < 0.05m or > 0.5m
-- **Not Upright**: Terminate if tilt > 60 degrees
-- **Episode Length**: Max 80 seconds
+1. How do I validate joint limits match the real robot?
+2. What action scaling is safe to start with?
+3. How do I implement a safety watchdog?
+4. What's the proper bring-up procedure for a learned policy?
+5. How do I characterize the sim-to-real gap for this platform?
 
-## Deployment Checklist
+## References I'd Consult
 
-- [ ] Verify URDF joint limits match hardware
-- [ ] Test with `action-scale 0.1` first
-- [ ] Have e-stop ready
-- [ ] Use soft surface for initial tests
-- [ ] Monitor motor temperatures
-- [ ] Check for joint velocity limits
+- K-Scale deployment docs for Zeroth-01
+- Literature on sim-to-real for legged robots (e.g., ANYmal, MIT Cheetah)
+- Domain randomization best practices
 
-## Known Limitations
+---
 
-1. **No push recovery mode yet**: Current policy only does forward walking
-2. **No kneel mode yet**: Controlled descent not implemented
-3. **Sim-to-real gap**: Real actuators have delays, friction differs
-4. **No terrain handling**: Trained on flat ground only
-
-## Emergency Procedures
-
-If robot becomes unstable:
-1. Press e-stop immediately
-2. Support robot manually if safe
-3. Review logs for cause
-4. Reduce action scale before retrying
-
-## Contact
-
-For safety concerns or questions about deployment, open an issue on GitHub.
+*This section exists to acknowledge what I don't know, not to claim expertise I don't have.*

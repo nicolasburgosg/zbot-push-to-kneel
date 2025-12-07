@@ -6,7 +6,7 @@
 
 ![Zeroth-01 Robot in MuJoCo Simulation](results/demo.png)
 
-[Design Doc](docs/design.md) | [Results](docs/results.md) | [Safety](docs/safety.md)
+[Design Doc](docs/design.md) | [Results](docs/results.md) | [Limitations](docs/safety.md)
 
 </div>
 
