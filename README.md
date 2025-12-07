@@ -42,9 +42,9 @@ python -m train load_from_ckpt_path=results/ckpt.bin
 
 | Metric | Value |
 |--------|-------|
-| Training steps | 518 |
-| Total reward | 1.0 → 2.2 |
-| Forward velocity | 0.1 → 0.7 |
+| Training steps | ~550 |
+| Total reward | 2.0 → 2.4 |
+| Forward velocity | 0.64 → 0.78 |
 | Model size | 195K params |
 
 See [docs/results.md](docs/results.md) for detailed analysis and videos.

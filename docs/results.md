@@ -4,30 +4,30 @@
 
 | Run | Steps | Duration | Final Reward | Notes |
 |-----|-------|----------|--------------|-------|
-| run_028 | 518 | ~4.5 hrs | 2.2 | Laptop CPU (M2 Air) |
+| run_028 | ~550 | ~5 hrs | 2.2-2.4 | Laptop CPU (M2 Air) |
 
 ## Learning Curves
 
 ### Total Reward
-![Total Reward](../results/plots/reward_total.png)
+![Total Reward](../results/plots/reward_total.jpeg)
 
-Total reward increased from ~1.0 to ~2.2 over 518 training steps, indicating successful learning.
+Total reward started around 2.0, dipped during early exploration, then climbed steadily to plateau around 2.2-2.4 by step 550. The plateau suggests the policy has converged.
 
 ### Forward Velocity
-![Forward Velocity](../results/plots/reward_forward.png)
+![Forward Velocity](../results/plots/results_forward.jpeg)
 
-Forward velocity reward improved from ~0.1 to ~0.7, showing the robot learned to walk forward.
+Forward velocity reward improved from ~0.64 to ~0.78, with oscillations showing the robot exploring different gaits. The sustained high values indicate successful forward locomotion.
 
 ### Individual Reward Components
 
 | Reward | Start | End | Trend |
 |--------|-------|-----|-------|
-| `reward/_total` | 1.0 | 2.2 | Improving |
-| `reward/forward` | 0.1 | 0.7 | Improving |
-| `reward/arm_pose` | -0.3 | -0.13 | Improving |
-| `reward/feet_airtime` | -0.12 | -0.07 | Improving |
-| `reward/feet_too_close` | -0.11 | -0.01 | Improving |
-| `reward/feet_orient` | 0.046 | 0.022 | Oscillating |
+| `reward/_total` | 2.0 | 2.2-2.4 | Converged |
+| `reward/forward` | 0.64 | 0.78 | Improving |
+| `reward/arm_pose` | -0.28 | -0.08 | Improving |
+| `reward/feet_airtime` | -0.10 | -0.06 | Improving |
+| `reward/lateral_vel_penalty` | 0.5 | 0.7 | Improving |
+| `reward/stay_alive` | ~-0.01 | ~-0.006 | Stable |
 
 ## Demo Videos
 
