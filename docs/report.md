@@ -17,14 +17,11 @@
 
 ## 1. Problem and Motivation
 
-Humanoid robots face a fundamental challenge: when pushed beyond their balance limits, they fall catastrophically. Unlike wheeled robots that can simply stop, bipeds have a narrow stability margin and high center of mass. A fall can damage expensive hardware, injure nearby humans, or destroy the robot entirely.
+Uncontrolled falls are one of the most common and damaging failures of human movement. For older adults and people with mobility impairments, a single fall can mean fractures, head trauma, loss of confidence, and long-term loss of independence. Existing solutions like helmets, hip protectors, and grab bars are mostly passive: they help once impact happens, but they do not shape the dynamics of the fall itself.
 
-This project addresses fall mitigation through two complementary strategies:
+Most wearable robots and exoskeletons focus on **positive work**—helping people walk farther, lift more, or move faster. In the scenarios that matter most for safety, however, the key problem is **negative work and controlled descent**: when balance is lost, can we slow the fall, lower the center of mass in a safe way, and avoid high-energy impacts to the hips, torso, and head?
 
-1. **Push Recovery**: Active stepping and ankle torque adjustments to regain balance after disturbances
-2. **Controlled Kneel**: When recovery is impossible, lower the center of mass safely rather than toppling
-
-The controlled kneel approach is inspired by biomechanics research on eccentric muscle control—the same mechanism that allows humans to sit down gently rather than collapse. The goal is a policy that knows when to fight for balance and when to yield gracefully.
+This project is an early step toward that goal. I use a small humanoid platform (Zeroth-01) as a safe testbed for learning and evaluating control strategies that (1) detect when balance is failing, (2) attempt recovery when possible, and (3) if recovery is unlikely, transition into a **controlled kneel or sit-down** rather than a catastrophic fall. The long-term intent is to transfer these ideas to wearable robotic systems and assistive devices that help real people fall more safely, not just move more strongly.
 
 ---
 
