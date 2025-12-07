@@ -1,6 +1,17 @@
 # Zeroth-01 Push-Recovery and Controlled Kneel Controller
 
-**Nicolas Burgos**
+**Nicolas Burgos** | December 2024
+
+---
+
+> **Summary**
+>
+> | | |
+> |---|---|
+> | **Model** | GRU PPO (195K params, 3 layers, 64 hidden) |
+> | **Simulation** | MuJoCo + K-Sim, 20-DoF Zeroth-01 humanoid |
+> | **Hardware** | MacBook Air M2 (24 GB, CPU-only) |
+> | **Key Result** | Total reward 2.0 → 2.4, forward velocity 0.64 → 0.78 |
 
 ---
 
@@ -101,25 +112,6 @@ Training includes randomized push disturbances via `LinearPushEvent`:
 
 Pushes are applied to the robot's torso at random intervals, teaching the policy to maintain balance under perturbation.
 
-### Evaluation Battery
-
-A systematic push battery (not yet implemented) would test:
-
-```python
-PUSH_BATTERY = [
-    {"force": (20, 0, 0), "label": "front_easy"},
-    {"force": (-25, 0, 0), "label": "back_easy"},
-    {"force": (50, 0, 0), "label": "front_medium"},
-    {"force": (90, 0, 0), "label": "front_hard"},
-    # ... additional scenarios
-]
-```
-
-Metrics to track:
-- Recovery rate (% pushes survived)
-- Peak base acceleration during descent
-- Time to stable configuration
-
 ---
 
 ## 4. Results
@@ -167,7 +159,54 @@ The trained policy demonstrates basic forward walking with reasonable gait timin
 
 ---
 
-## 5. Limitations and Future Work
+## 5. Engineering Challenges
+
+This section describes non-trivial problems encountered during development.
+
+### KSIM 0.2.10+ API Migration
+
+The [ksim-gym-zbot](https://github.com/kscalelabs/ksim-gym-zbot) template was built for an older KSIM version. Updating required:
+
+- **Dict-based observations**: Methods like `get_observations()` now return `dict[str, T]` instead of lists
+- **New event system**: `LinearPushEvent` replaced `PushEvent` with different parameter names (`linvel` instead of `force`)
+- **Termination API**: `BadZTermination` uses `min_z`/`max_z` instead of `unhealthy_z_lower`/`upper`
+- **Noise specification**: `ksim.AdditiveGaussianNoise(std=...)` instead of float values
+
+### Mixture-of-Gaussians Implementation
+
+The template's action distribution didn't match the current Equinox/JAX patterns. I implemented a local `MixtureOfGaussians` class that:
+
+- Outputs mixture weights, means, and log-stds for each joint
+- Computes log-probabilities correctly for PPO's objective
+- Provides both `sample()` and `mode` for training vs. evaluation
+
+A subtle bug: `mode` was implemented as a `@property`, but I initially called it as `mode()`. This caused shape mismatches that took time to debug.
+
+### Laptop-Scale Training
+
+GPU clusters weren't available, so I adapted the training config for M2 Air:
+
+| Original | Laptop |
+|----------|--------|
+| 256 envs | 8 envs |
+| batch_size=64 | batch_size=4 |
+| hidden_size=128 | hidden_size=64 |
+| depth=5 | depth=3 |
+| num_mixtures=5 | num_mixtures=3 |
+
+This reduced parameters from ~1.1M to ~195K and made training feasible (~30s/step on CPU). The tradeoff is less expressive policy, but sufficient to demonstrate learning.
+
+### PPO Shape Debugging
+
+JAX's JIT compilation defers errors until runtime, making shape mismatches hard to trace. Issues encountered:
+
+- Actor/critic carry states had different shapes due to separate GRU instances
+- Log-prob computation required careful broadcasting for mixture components
+- Observation dict keys had to match exactly (silent failures otherwise)
+
+---
+
+## 6. Limitations and Future Work
 
 ### Current Limitations
 
@@ -209,4 +248,4 @@ The trained policy demonstrates basic forward walking with reasonable gait timin
 
 ---
 
-*Code and training artifacts available at: https://github.com/[username]/zeroth-fall*
+*Code and training artifacts: [github.com/nicoburgos/zeroth-fall](https://github.com/nicoburgos/zeroth-fall)*
