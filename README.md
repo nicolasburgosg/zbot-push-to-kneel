@@ -4,7 +4,7 @@
 
 **Training a humanoid robot to recover from pushes and kneel safely when recovery is impossible.**
 
-![Demo](results/demo.gif)
+![Zeroth-01 Robot in MuJoCo Simulation](results/demo.png)
 
 [Design Doc](docs/design.md) | [Results](docs/results.md) | [Safety](docs/safety.md)
 
