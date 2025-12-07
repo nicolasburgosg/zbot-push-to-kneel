@@ -25,4 +25,7 @@ build/
 dist/
 *.so
 out*/
+
+# Training runs (keep results/ for curated outputs)
+zbot_walking_task/
 **/run_*/

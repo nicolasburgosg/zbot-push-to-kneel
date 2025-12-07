@@ -1,111 +1,95 @@
+# ZBot Push-to-Kneel Controller
+
 <div align="center">
-<h1>K-Scale Z-Bot Benchmark</h1>
-<p>Train and deploy your own z-bot controller in 700 lines of Python</p>
-<h3>
-  <a href="https://url.kscale.dev/leaderboard">Leaderboard</a> ·
-  <a href="https://url.kscale.dev/docs">Documentation</a> ·
-  <a href="https://github.com/kscalelabs/ksim/tree/master/examples">K-Sim Examples</a>
-</h3>
+
+**Training a humanoid robot to recover from pushes and kneel safely when recovery is impossible.**
+
+![Demo](results/demo.gif)
+
+[Design Doc](docs/design.md) | [Results](docs/results.md) | [Safety](docs/safety.md)
+
 </div>
 
-## CPU Training (Laptop-Optimized)
+## Problem
 
-This fork includes laptop-optimized defaults for training on CPU (tested on M2 Air). Key changes from the upstream template:
+Humanoid robots fall catastrophically when pushed beyond their balance limits, risking damage to the robot and environment. This project trains a controller that attempts push recovery and, when that fails, transitions to a controlled kneel to minimize impact.
 
-| Parameter | GPU Default | Laptop Default |
-|-----------|------------|----------------|
-| `num_envs` | 4096 | 8 |
-| `batch_size` | 256 | 4 |
-| `hidden_size` | 128 | 64 |
-| `depth` | 5 | 3 |
-| `num_mixtures` | 5 | 3 |
+## Approach
 
-Model size reduced from ~1.1M to ~195K parameters. Each training step takes ~1-2 minutes on M2 Air.
+- **PPO with JAX/KSIM**: Proximal Policy Optimization using K-Scale's simulation framework
+- **GRU-based policy**: Recurrent neural network with mixture-of-gaussians action distribution
+- **Reward shaping**: Forward velocity, upright bonus, gait timing, joint limit penalties
+- **Laptop-optimized**: 195K parameter model trainable on M2 Air CPU (~30s/step)
+
+## Quick Start
 
 ```bash
-# Laptop training (uses defaults)
+# Setup
+conda create -n zbot python=3.11 -y && conda activate zbot
+pip install -r requirements.txt
+
+# Train (laptop defaults)
 python -m train
 
+# Watch trained policy
+python -m train run_mode=view load_from_ckpt_path=results/ckpt.bin
+
+# Resume training from checkpoint
+python -m train load_from_ckpt_path=results/ckpt.bin
+```
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Training steps | 518 |
+| Total reward | 1.0 → 2.2 |
+| Forward velocity | 0.1 → 0.7 |
+| Model size | 195K params |
+
+See [docs/results.md](docs/results.md) for detailed analysis and videos.
+
+## Repository Structure
+
+```
+zeroth-fall/
+├── train.py              # Main training script (task, model, rewards)
+├── convert.py            # Checkpoint → kinfer conversion
+├── docs/
+│   ├── design.md         # Implementation plan and architecture
+│   ├── results.md        # Training results, plots, videos
+│   └── safety.md         # Safety considerations for deployment
+├── results/
+│   ├── demo.gif          # Demo animation
+│   ├── ckpt.bin          # Best checkpoint
+│   └── plots/            # TensorBoard exports
+└── zbot_walking_task/    # Training runs (gitignored)
+```
+
+## Training Configuration
+
+| Parameter | Laptop (CPU) | GPU |
+|-----------|-------------|-----|
+| `num_envs` | 8 | 256+ |
+| `batch_size` | 4 | 64 |
+| `hidden_size` | 64 | 128 |
+| `depth` | 3 | 5 |
+| `num_mixtures` | 3 | 5 |
+
+```bash
 # GPU training (if available)
 python -m train num_envs=256 batch_size=64 hidden_size=128 depth=5 num_mixtures=5
 ```
 
-### Additional Changes
+## Technical Details
 
-- **Local `MixtureOfGaussians`**: Re-implemented since it was removed in ksim 0.2.10+
-- **Custom reward classes**: `NaiveForwardReward`, `LateralVelocityPenalty`, etc.
-- **Bug fix**: `mode` property access in action distribution
+- **Observations**: Joint positions/velocities (40), IMU orientation (4), commands (6) = 50 dims
+- **Actions**: 20 joint position targets (mixture of 3 gaussians each)
+- **Rewards**: `stay_alive`, `upright`, `forward`, `feet_airtime`, `arm_pose`, etc.
+- **Terminations**: Bad Z height, not upright, episode length
 
-## Getting Started
+Built on [K-Scale's ksim-gym-zbot](https://github.com/kscalelabs/ksim-gym-zbot) template.
 
-1. Read through the [ksim examples](https://github.com/kscalelabs/ksim/tree/master/examples)
-2. Create a new repository from this template by clicking [here](https://github.com/new?template_name=kscale-zbot-benchmark&template_owner=kscalelabs)
-3. Make sure you have installed `git-lfs`:
+## License
 
-```bash
-sudo apt install git-lfs  # Ubuntu
-brew install git-lfs  # MacOS
-```
-
-4. Clone the new repository you create from this template:
-
-```bash
-git clone git@github.com:<YOUR USERNAME>/kscale-zbot-benchmark.git
-cd kscale-zbot-benchmark
-```
-
-5. Create a new Python environment (we require Python 3.11 or later)
-6. Install the package with its dependencies:
-
-```bash
-pip install -r requirements.txt
-pip install 'jax[cuda12]'  # If using GPU machine, install Jax CUDA libraries
-```
-
-7. Train a policy:
-
-```bash
-python -m train
-```
-
-8. Convert the checkpoint to a `kinfer` model:
-
-```bash
-python -m convert /path/to/ckpt.bin /path/to/model.kinfer
-```
-
-9. Visualize the converted model:
-
-```bash
-kinfer-sim assets/model.kinfer kbot --save-video assets/video.mp4
-```
-
-## Troubleshooting
-
-If you encounter issues, please consult the [ksim documentation](https://docs.kscale.dev/docs/ksim#/) or reach out to us on [Discord](https://url.kscale.dev/docs).
-
-## Tips and Tricks
-
-To see all the available command line arguments, use the command:
-
-```bash
-python -m train --help
-```
-
-To visualize running your model without using `kos-sim`, use the command:
-
-```bash
-python -m train run_mode=view
-```
-
-This repository contains a pre-trained checkpoint of a model which has been learned to be robust to pushes, which is useful for both jump-starting model training and understanding the codebase. To initialize training from this checkpoint, use the command:
-
-```bash
-python -m train load_from_ckpt_path=assets/ckpt.bin
-```
-
-You can visualize the pre-trained model by combining these two commands:
-
-```bash
-python -m train load_from_ckpt_path=assets/ckpt.bin run_mode=view
-```
+MIT
